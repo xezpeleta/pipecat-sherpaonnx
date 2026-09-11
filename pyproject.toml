@@ -1,0 +1,60 @@
+[project]
+name = "pipecat-sherpaonnx"
+version = "0.1.0"
+description = "Pipecat STT services for sherpa-onnx (offline & streaming). Works with any sherpa-onnx ASR model, in any language — local CPU inference, no cloud keys."
+readme = "README.md"
+license = "BSD-2-Clause"
+authors = [
+    { name = "Xabi Ezpeleta", email = "xezpeleta@gmail.com" },
+]
+requires-python = ">=3.11"
+keywords = [
+    "pipecat",
+    "sherpa-onnx",
+    "stt",
+    "asr",
+    "speech-to-text",
+    "speech-recognition",
+    "voice-agent",
+    "onnx",
+    "local-inference",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pipecat-ai>=1.0",
+    "sherpa-onnx>=1.10",
+    "numpy>=1.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/xezpeleta/pipecat-sherpaonnx"
+Repository = "https://github.com/xezpeleta/pipecat-sherpaonnx"
+Issues = "https://github.com/xezpeleta/pipecat-sherpaonnx/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipecat_sherpaonnx"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

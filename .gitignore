@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Test / cache
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Model files (never commit large weights)
+*.onnx
+*.int8.onnx
+models/
