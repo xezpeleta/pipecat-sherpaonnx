@@ -61,9 +61,14 @@ def resolve_transducer_files(
             f"Could not find a {label} file in {base} (tried {patterns})."
         )
 
-    enc = _find(encoder, ["encoder*.onnx"], "encoder")
-    dec = _find(decoder, ["decoder*.onnx"], "decoder")
-    joi = _find(joiner, ["joiner*.onnx"], "joiner")
+    # Prefer the quantized (int8) variant — it's smaller and faster on CPU —
+    # then fall back to any other encoder/decoder/joiner .onnx. Trying int8
+    # first (instead of relying on sorted() ordering) is robust against repos
+    # that also ship fp16/fp32 variants, where alphabetical order could pick
+    # the wrong one.
+    enc = _find(encoder, ["encoder.int8.onnx", "encoder*.onnx"], "encoder")
+    dec = _find(decoder, ["decoder.int8.onnx", "decoder*.onnx"], "decoder")
+    joi = _find(joiner, ["joiner.int8.onnx", "joiner*.onnx"], "joiner")
     tok = _find(tokens, ["tokens.txt"], "tokens")
     return enc, dec, joi, tok
 
