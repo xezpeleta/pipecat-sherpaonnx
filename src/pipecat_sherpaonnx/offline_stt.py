@@ -29,6 +29,13 @@ from pipecat.utils.time import time_now_iso8601
 
 from ._common import pcm_bytes_to_float32, resolve_transducer_files
 
+# Module-level recognizer cache, shared across service instances. Pipecat
+# pipelines are built per connection, so without this cache every WebSocket
+# reconnect would reload the (typically 100+ MB) ONNX weights from disk —
+# measured at ~2.4 s for a 623 MB encoder. Recognizers are immutable and
+# thread-safe for inference, so sharing one across connections is safe.
+_RECOGNIZER_CACHE: dict[tuple, Any] = {}
+
 
 class SherpaOnnxOfflineSTTService(SegmentedSTTService):
     """VAD-segmented STT backed by ``sherpa_onnx.OfflineRecognizer``.
@@ -137,8 +144,17 @@ class SherpaOnnxOfflineSTTService(SegmentedSTTService):
         enc, dec, joi, tok = resolve_transducer_files(
             self._model_dir, self._encoder, self._decoder, self._joiner, self._tokens
         )
+        cache_key = (
+            enc, dec, joi, tok,
+            self._num_threads, self._decoding_method, self._model_type,
+            self._provider, self._hotwords_file, self._hotwords_score,
+        )
+        cached = _RECOGNIZER_CACHE.get(cache_key)
+        if cached is not None:
+            self._recognizer = cached
+            return
         logger.info(f"{self.name}: loading sherpa-onnx offline model (tokens={tok})")
-        self._recognizer = await asyncio.to_thread(
+        recognizer = await asyncio.to_thread(
             sherpa_onnx.OfflineRecognizer.from_transducer,
             encoder=enc,
             decoder=dec,
@@ -151,6 +167,8 @@ class SherpaOnnxOfflineSTTService(SegmentedSTTService):
             hotwords_file=self._hotwords_file,
             hotwords_score=self._hotwords_score,
         )
+        _RECOGNIZER_CACHE[cache_key] = recognizer
+        self._recognizer = recognizer
         logger.info(f"{self.name}: sherpa-onnx offline model ready")
 
     def _decode(self, audio: bytes) -> str:
